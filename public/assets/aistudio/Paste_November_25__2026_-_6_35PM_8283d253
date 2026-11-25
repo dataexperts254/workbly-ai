@@ -1,0 +1,1191 @@
+# MASTER WEBSITE DEVELOPMENT PROMPT
+# PROXY AI
+## Your Gateway to Online Work.
+
+Act as an expert full-stack software developer, SaaS architect, UI/UX designer, database engineer, payment integration specialist and business systems architect.
+
+Build a complete, professional, scalable and production-ready online jobs marketplace called PROXY AI.
+
+This must be a functioning web application, not merely a homepage or visual prototype.
+
+The platform must include:
+- Public website.
+- User registration and authentication.
+- Membership subscriptions.
+- Job marketplace.
+- Job allocation engine.
+- Job applications and submissions.
+- Worker earnings.
+- M-Pesa payment integration.
+- Referral and affiliate programme.
+- Referral commission management.
+- Withdrawal management.
+- Complete administrator dashboard.
+- Dedicated platform owner revenue dashboard.
+- Financial reporting and profitability analytics.
+
+The platform must initially target Kenya while supporting international expansion.
+
+# 1. BUSINESS IDENTITY
+
+Company name: PROXY AI
+
+Tagline: Your Gateway to Online Work.
+
+Business type: Online Jobs and Digital Work Marketplace.
+
+Primary market: Kenya.
+
+Primary display currency: USD ($).
+
+M-Pesa transaction currency: Kenyan Shillings (KES).
+
+Business model:
+1. Paid memberships.
+2. Referral commissions.
+3. Managed project commissions.
+4. Corporate partnerships.
+5. Legitimate affiliate partnerships.
+6. Sponsored job placements.
+
+PROXY AI centrally manages the marketplace. The platform owner and authorised administrators control job sourcing, provider verification, job publishing, subscriptions, financial operations and platform management.
+
+Ordinary members cannot publish jobs or register as job providers.
+
+# 2. BRAND IDENTITY AND WEBSITE DESIGN
+
+Create a distinctive, premium technology brand.
+
+The website should look like an established online work marketplace rather than a basic survey website.
+
+Use:
+- Deep navy blue.
+- White.
+- Electric blue.
+- Subtle purple accents.
+- Light grey backgrounds.
+- Green for successful payments and approved earnings.
+
+Create:
+- Professional PROXY AI logo.
+- Favicon.
+- Consistent typography.
+- Professional icons.
+- Modern navigation.
+- Attractive job cards.
+- Responsive dashboard layouts.
+- Mobile-first design.
+
+The interface must work smoothly on smartphones, tablets and desktop computers.
+
+Design inspiration should come from modern freelance marketplaces, professional SaaS platforms and AI technology companies.
+
+# 3. MEMBERSHIP STRUCTURE AND PRICING
+
+Implement four membership levels.
+
+All prices must be displayed in USD.
+
+All paid memberships use quarterly billing by default. Allow the administrator to configure billing intervals without changing the underlying membership rules.
+
+## A. FREE MEMBER
+
+Price: $0.
+
+Benefits:
+- Two job opportunities per week.
+- Access to unverified-provider jobs.
+- Basic member dashboard.
+- Job application functionality.
+- Submission functionality.
+- Earnings tracking.
+- Basic notifications.
+- Work history.
+- Referral programme access.
+
+Every new member automatically starts as a Free Member.
+
+## B. VERIFIED MEMBER
+
+Initial reference pricing: Preserve the original KSh 299 monthly pricing intention and convert it into a USD price at launch.
+
+The administrator must be able to configure the exact USD quarterly subscription price.
+
+Benefits:
+- At least 10 eligible job opportunities per week, subject to actual inventory.
+- Access to verified and unverified providers.
+- Premium job categories.
+- Priority job notifications.
+- Personalised job recommendations.
+- Enhanced earnings dashboard.
+- Performance analytics.
+- Improved member profile.
+- Standard support.
+
+## C. PRO WORKER
+
+<badge color="success">$5</badge>
+
+Quarterly subscription price: $5.
+
+Benefits:
+- All Verified Member benefits.
+- At least 10 eligible opportunities per week, subject to inventory.
+- Access to Pro-exclusive jobs.
+- Priority consideration for selected opportunities.
+- Advanced work analytics.
+- Premium notifications.
+- Enhanced worker profile.
+- Priority support.
+- Access to selected premium projects.
+
+## D. TOP-RATED WORKER
+
+<badge color="success">$8</badge>
+
+Quarterly subscription price: $8.
+
+Top-Rated is a paid membership tier.
+
+Benefits:
+- All Pro Worker benefits.
+- Unlimited access to eligible available opportunities.
+- Access to verified-provider opportunities.
+- Top-Rated membership badge.
+- Priority consideration for suitable projects.
+- Access to exclusive opportunities.
+- Advanced performance analytics.
+- Highest membership-level job access.
+- Priority customer support.
+
+Top-Rated is no longer automatically unlocked after 50 completed jobs.
+
+However, maintain a separate worker achievement system. Members who complete 50 approved jobs may receive a 50 Jobs Completed achievement badge.
+
+Do not confuse achievement badges with paid membership status.
+
+## Membership management
+
+Implement:
+- Membership comparison.
+- Subscription purchasing.
+- Quarterly billing.
+- Subscription activation.
+- Expiry tracking.
+- Renewal reminders.
+- Manual renewal.
+- Upgrade and downgrade functionality.
+- Subscription history.
+- Payment history.
+- Automatic downgrade after expiry.
+
+Do not charge members automatically without explicit recurring-payment authorisation.
+
+When a membership expires, preserve work history, earnings, payment records and outstanding worker balances.
+
+# 4. CURRENCY AND M-PESA PAYMENT SYSTEM
+
+This is a critical requirement.
+
+**USD is the primary currency displayed throughout PROXY AI. KES is used for actual M-Pesa transactions.**
+
+## Currency rules
+
+Display all of the following in USD:
+- Membership prices.
+- Job rewards.
+- Worker earnings.
+- Account balances.
+- Referral commissions.
+- Project revenue.
+- Platform commissions.
+- Financial reports.
+- Owner revenue.
+- Profitability summaries.
+
+Do not use KES as the main display currency.
+
+## M-Pesa payment workflow
+
+Integrate Safaricom Daraja API.
+
+When a member purchases a subscription:
+
+1. Display the subscription price in USD.
+2. Retrieve the current USD/KES exchange rate.
+3. Calculate the KES equivalent.
+4. Display both currencies.
+5. Request the member's M-Pesa phone number.
+6. Initiate an STK Push in KES.
+7. Receive the Safaricom callback.
+8. Verify the payment server-side.
+9. Activate the membership only after confirmed successful payment.
+10. Record the transaction in both currencies.
+
+Example:
+
+Subscription: $5.
+
+Illustrative exchange rate: $1 = KES 130.
+
+M-Pesa payment request: KES 650.
+
+The exchange rate is illustrative. Use a reliable exchange-rate source for actual transactions.
+
+## Payment records
+
+Store:
+- USD subscription amount.
+- KES payment amount.
+- Exchange rate.
+- Member ID.
+- M-Pesa phone number.
+- Transaction reference.
+- Payment status.
+- Payment timestamp.
+- Confirmation timestamp.
+- Callback details.
+
+Implement:
+- Successful payment handling.
+- Failed payment handling.
+- Cancelled payment handling.
+- Pending payment handling.
+- Duplicate callback protection.
+- Transaction reconciliation.
+- Refund management.
+
+Never activate subscriptions based only on STK Push initiation.
+
+## Currency management
+
+Create an administrator exchange-rate management section.
+
+Allow:
+- Automatic rate retrieval.
+- Manual fallback rates.
+- Rate history.
+- Rate timestamps.
+- Transaction-specific exchange-rate records.
+
+Use USD as the primary reporting currency.
+
+# 5. JOB CATEGORIES
+
+Create dedicated marketplace categories for:
+
+1. Online Surveys.
+2. AI Training.
+3. AI Data Annotation.
+4. AI Response Evaluation.
+5. AI Model Testing.
+6. Data Collection.
+7. Data Labelling.
+8. Transcription.
+9. Content Writing.
+10. Research Assistance.
+11. Academic Tutoring.
+12. Virtual Assistance.
+13. Data Entry.
+14. Image Annotation.
+15. Video Annotation.
+16. Translation.
+17. Other Online Freelance Tasks.
+
+Every category should have:
+- Category landing page.
+- Category description.
+- Job listings.
+- Search.
+- Filters.
+- Relevant icons.
+- Featured opportunities.
+
+Academic opportunities should support legitimate tutoring, editing, research guidance and learning assistance.
+
+# 6. JOB PROVIDER MANAGEMENT
+
+Only administrators can create and publish jobs.
+
+Create provider classifications:
+
+- Unverified Provider.
+- Verified Provider.
+
+Administrators must be able to:
+- Register provider records.
+- Edit provider profiles.
+- Verify providers.
+- Suspend providers.
+- Upload verification evidence.
+- Record source URLs.
+- Track provider reliability.
+- Record permissions and partnership details.
+
+Verification must be based on genuine checks.
+
+## Job access permissions
+
+| Membership | Unverified jobs | Verified jobs |
+|---|---|---|
+| Free | Yes | No |
+| Verified | Yes | Yes |
+| Pro Worker | Yes | Yes |
+| Top-Rated | Yes | Yes |
+
+Pro-exclusive and Top-Rated-exclusive opportunities must have additional eligibility rules.
+
+# 7. JOB MANAGEMENT SYSTEM
+
+Create a complete administrator-controlled job management system.
+
+Each job must contain:
+- Job ID.
+- Title.
+- Description.
+- Category.
+- Provider.
+- Provider verification status.
+- Source URL.
+- Instructions.
+- Required skills.
+- Difficulty.
+- Estimated duration.
+- Reward in USD.
+- Available positions.
+- Publication date.
+- Deadline.
+- Eligible membership levels.
+- Submission requirements.
+- Payment conditions.
+- Job status.
+
+Job statuses:
+- Draft.
+- Pending Verification.
+- Approved.
+- Published.
+- Fully Allocated.
+- Paused.
+- Closed.
+- Expired.
+
+Administrators must be able to:
+- Create jobs.
+- Edit jobs.
+- Duplicate jobs.
+- Publish jobs.
+- Pause jobs.
+- Close jobs.
+- Set rewards.
+- Set job limits.
+- Assign providers.
+- Set membership eligibility.
+- Review applications.
+- Monitor submissions.
+
+Do not publish fabricated jobs or unauthorised copies of external opportunities.
+
+# 8. WEEKLY JOB ALLOCATION ENGINE
+
+Implement a secure server-side allocation system.
+
+Default weekly allocations:
+
+- Free Member: 2 jobs.
+- Verified Member: At least 10 jobs.
+- Pro Worker: At least 10 jobs.
+- Top-Rated Worker: Unlimited eligible jobs.
+
+All allocations are subject to genuine job availability.
+
+The system must:
+- Check membership.
+- Check provider verification.
+- Check job eligibility.
+- Check job capacity.
+- Check deadlines.
+- Prevent duplicate allocations.
+- Prevent exceeding weekly allowances.
+- Record allocation history.
+- Reset allowances automatically.
+
+Use Africa/Nairobi as the default operating timezone.
+
+Allow administrators to configure allocation limits.
+
+If inventory is insufficient, display the actual available opportunities rather than inventing jobs.
+
+# 9. APPLICATION AND SUBMISSION SYSTEM
+
+Build a complete job workflow.
+
+Members must be able to:
+1. Browse jobs.
+2. View job details.
+3. Apply or access opportunities.
+4. Receive instructions.
+5. Complete tasks.
+6. Upload required evidence.
+7. Submit work.
+8. Track review status.
+9. Receive feedback.
+10. Receive approved earnings.
+
+Support:
+- Text submissions.
+- Documents.
+- Images.
+- File attachments.
+- External task references.
+- Submission notes.
+
+Submission statuses:
+- Allocated.
+- Applied.
+- Accepted.
+- In Progress.
+- Submitted.
+- Under Review.
+- Approved.
+- Rejected.
+- Paid.
+
+Administrators must be able to review, approve, reject and request corrections.
+
+Only approved work generates payable earnings.
+
+# 10. MEMBER DASHBOARD
+
+Create a modern member dashboard.
+
+Display:
+- Welcome message.
+- Current membership.
+- Subscription expiry.
+- Weekly job allowance.
+- Available jobs.
+- Allocated jobs.
+- Completed jobs.
+- Pending submissions.
+- Approved submissions.
+- Rejected submissions.
+- Total earnings.
+- Pending earnings.
+- Available withdrawal balance.
+- Referral earnings.
+- Referral statistics.
+
+Include:
+- Recommended jobs.
+- Recent opportunities.
+- Membership upgrade section.
+- Notifications.
+- Work performance.
+- Earnings charts.
+- Referral progress.
+
+All financial amounts must be displayed in USD.
+
+# 11. REFERRAL AND AFFILIATE PROGRAMME
+
+This is a major feature of PROXY AI.
+
+Build a complete referral programme that allows members to earn commission by inviting new paying members.
+
+The platform owner must also earn from the referral programme through retained subscription revenue.
+
+## A. Unique referral links
+
+Every member receives a unique referral code.
+
+Example:
+
+proxyai.com/register?ref=PROXY123
+
+When a new person registers through the link:
+- Record the referral code.
+- Identify the referring member.
+- Link the new account to the referrer.
+- Record the registration date.
+- Track subsequent subscription purchases.
+- Track subscription renewals.
+
+Preserve referral attribution throughout the registration and payment process.
+
+Use a configurable attribution window, initially 90 days.
+
+## B. Referral commission
+
+Set the default referral commission at:
+
+**10% of eligible subscription revenue.**
+
+Example:
+
+A referred member purchases a $5 Pro Worker subscription.
+
+| Description | Amount |
+|---|---:|
+| Subscription payment | $5.00 |
+| Referrer commission (10%) | $0.50 |
+| PROXY AI retained revenue | $4.50 |
+
+For an $8 Top-Rated subscription:
+
+| Description | Amount |
+|---|---:|
+| Subscription payment | $8.00 |
+| Referrer commission (10%) | $0.80 |
+| PROXY AI retained revenue | $7.20 |
+
+These examples exclude applicable operating expenses, taxes, payment-processing fees and refunds.
+
+## C. Recurring referral commissions
+
+Referral commission should apply to:
+- First eligible subscription payment.
+- Eligible quarterly renewals.
+- Eligible membership upgrades.
+
+For example, when a referred member renews their $5 subscription, the referrer earns another $0.50.
+
+Calculate commissions only after successful payment confirmation.
+
+Do not calculate commissions on:
+- Failed payments.
+- Cancelled transactions.
+- Unpaid invoices.
+- Refunded payments.
+- Chargebacks.
+
+Reverse previously credited commissions when an eligible payment is refunded or charged back.
+
+## D. Referral dashboard for members
+
+Create a dedicated referral dashboard.
+
+Display:
+- Unique referral link.
+- Copy referral link button.
+- Referral code.
+- Total clicks.
+- Total registrations.
+- Verified registrations.
+- Free referrals.
+- Paid referrals.
+- Active referred subscribers.
+- Pending commissions.
+- Approved commissions.
+- Available referral balance.
+- Total referral earnings.
+- Referral transaction history.
+
+Include charts for:
+- Referral registrations over time.
+- Paid conversion rate.
+- Referral earnings.
+- Membership conversions.
+
+Provide a clear explanation of how commissions work.
+
+## E. Referral wallet
+
+Maintain a separate referral earnings ledger.
+
+Commission statuses:
+- Pending.
+- Approved.
+- Available.
+- Withdrawn.
+- Reversed.
+
+Only confirmed and eligible subscription payments can generate commission.
+
+Allow members to request withdrawal of available referral commissions according to the configured payout policy.
+
+Keep referral commissions separate from ordinary job earnings.
+
+## F. Referral fraud prevention
+
+Implement:
+- Self-referral prevention.
+- Duplicate account detection.
+- Duplicate payment detection.
+- Suspicious registration monitoring.
+- Referral attribution validation.
+- Commission reversal.
+- Account suspension for fraudulent activity.
+
+Do not reward fake registrations.
+
+Do not implement pyramid-style multi-level referral commissions.
+
+The programme must reward genuine paying customers, not recruitment alone.
+
+## G. Administrator referral controls
+
+Administrators must be able to:
+- Set referral commission percentage.
+- View all referral relationships.
+- View referrer profiles.
+- View referred member profiles.
+- View referral conversions.
+- Review commissions.
+- Approve eligible commissions.
+- Reverse fraudulent commissions.
+- Suspend referral accounts.
+- View referral withdrawals.
+- Export referral reports.
+
+Allow the platform owner to change the commission percentage without modifying application code.
+
+## H. External affiliate partnerships
+
+Create an additional affiliate partnerships module.
+
+Allow PROXY AI to earn commissions from legitimate third-party businesses through authorised affiliate programmes.
+
+Potential categories:
+- AI tools.
+- Freelancing platforms.
+- Survey platforms.
+- Educational platforms.
+- Productivity software.
+- Digital services.
+
+Track:
+- Affiliate partners.
+- Referral links.
+- Clicks.
+- Registrations.
+- Conversions.
+- Commission earned.
+- Commission paid.
+- Outstanding affiliate revenue.
+
+Only promote services with valid affiliate agreements and disclose affiliate relationships.
+
+# 12. PLATFORM OWNER REVENUE DASHBOARD
+
+Create a dedicated owner-only dashboard.
+
+This is separate from the normal administrator dashboard.
+
+Only the platform owner and explicitly authorised financial administrators can access it.
+
+The purpose is to give the owner a complete picture of how much PROXY AI generates, spends, retains and earns.
+
+## A. Revenue overview
+
+Display:
+- Total subscription revenue.
+- Verified Member revenue.
+- Pro Worker revenue.
+- Top-Rated revenue.
+- Referral-driven subscription revenue.
+- Non-referral subscription revenue.
+- Project commission revenue.
+- Corporate revenue.
+- Affiliate revenue.
+- Sponsored placement revenue.
+- Total gross revenue.
+
+Display all primary amounts in USD.
+
+## B. Referral revenue
+
+Display:
+- Total referred subscription sales.
+- Total referral commissions paid.
+- Total referral commissions pending.
+- Net revenue retained from referred subscriptions.
+- Revenue from recurring referred subscriptions.
+- Top-performing referrers.
+- Referral conversion rates.
+
+Example:
+
+Gross referred subscriptions: $1,000.
+
+Referrer commissions: $100.
+
+PROXY AI retained revenue: $900 before other expenses.
+
+## C. Expense management
+
+Track:
+- Referral commissions.
+- Worker payments.
+- Payment-processing expenses.
+- Hosting expenses.
+- Software subscriptions.
+- Marketing expenses.
+- Operational expenses.
+- Refunds.
+- Other business expenses.
+
+Allow authorised users to enter and categorise expenses.
+
+## D. Profitability
+
+Calculate:
+
+Gross revenue minus referral commissions, worker liabilities, payment-processing costs and operating expenses.
+
+Display:
+- Gross revenue.
+- Total referral commissions.
+- Worker payment liabilities.
+- Total operating expenses.
+- Net operating contribution.
+- Net profit.
+- Profit margin.
+
+Do not count unpaid worker earnings or unpaid referral commissions as profit.
+
+Use a clear accounting ledger rather than simply adding dashboard totals.
+
+## E. Revenue analytics
+
+Provide:
+- Daily revenue.
+- Weekly revenue.
+- Monthly revenue.
+- Quarterly revenue.
+- Annual revenue.
+- Revenue by membership.
+- Revenue by referral source.
+- Revenue by payment method.
+- Subscription renewal rate.
+- Membership conversion rate.
+- Customer acquisition cost where data is available.
+- Revenue per paying member.
+
+Include charts, date filters and CSV/Excel export functionality.
+
+## F. Revenue forecasting
+
+Build an optional forecasting module based on historical platform data.
+
+Estimate:
+- Future subscription revenue.
+- Expected renewals.
+- Referral revenue.
+- Operating expenses.
+- Potential profit.
+
+Clearly distinguish forecasts from actual financial results.
+
+# 13. WORKER EARNINGS AND WITHDRAWALS
+
+Create a separate worker financial system.
+
+Display:
+- Total job earnings.
+- Pending earnings.
+- Approved earnings.
+- Available withdrawal balance.
+- Withdrawal history.
+
+Members can:
+- Request withdrawals.
+- View transaction history.
+- Track payment status.
+- Receive notifications.
+
+Administrators can:
+- Review withdrawals.
+- Approve or reject requests.
+- Process payments.
+- Record transaction references.
+- Reconcile payouts.
+
+Use USD as the displayed accounting currency.
+
+Keep the following financial ledgers separate:
+1. Worker job earnings.
+2. Referral commissions.
+3. Membership payments.
+4. Platform revenue.
+5. Business expenses.
+
+Do not mix these balances.
+
+# 14. PROJECT COMMISSION SYSTEM
+
+Allow PROXY AI to earn a configurable 10% commission from eligible managed client-funded projects.
+
+Example:
+
+Client project value: $1,000.
+
+Worker payment: $900.
+
+Platform commission: $100.
+
+The commission must only apply where PROXY AI has a valid agreement and manages the transaction.
+
+Do not apply this commission automatically to external survey payments or unrelated third-party earnings.
+
+# 15. NOTIFICATION SYSTEM
+
+Implement in-app and email notifications.
+
+Notify members about:
+- New jobs.
+- Job allocations.
+- Application decisions.
+- Submission reviews.
+- Approved earnings.
+- Withdrawal updates.
+- Membership purchases.
+- Subscription expiry.
+- Referral registrations.
+- Referral conversions.
+- Referral commissions.
+- Referral withdrawals.
+- Important announcements.
+
+Notify administrators about:
+- New registrations.
+- New paying subscribers.
+- Failed payments.
+- Referral activity.
+- Suspicious accounts.
+- Pending withdrawals.
+- Pending submissions.
+- Provider verification requirements.
+
+# 16. PUBLIC WEBSITE PAGES
+
+Build:
+
+1. Homepage.
+2. Browse Jobs.
+3. Job Categories.
+4. Job Details.
+5. How It Works.
+6. Membership Plans.
+7. Referral Programme.
+8. About PROXY AI.
+9. Contact.
+10. FAQ.
+11. Login.
+12. Registration.
+13. Forgot Password.
+14. Privacy Policy.
+15. Terms and Conditions.
+
+## Homepage design
+
+Hero heading:
+
+**Your Gateway to Online Work.**
+
+Supporting text:
+
+Discover surveys, AI training opportunities, data annotation tasks and digital jobs. Join PROXY AI, access opportunities and build your online earning journey.
+
+Buttons:
+- Explore Jobs.
+- Join for Free.
+
+Homepage sections:
+- Hero.
+- Featured jobs.
+- Job categories.
+- How it works.
+- Membership plans.
+- Referral programme.
+- Why choose PROXY AI.
+- Genuine platform statistics.
+- Testimonials, only when genuine.
+- FAQ.
+- Final registration call to action.
+
+Include a referral programme promotional section:
+
+**Earn by Sharing Opportunities.**
+
+Invite friends to PROXY AI and earn 10% commission on eligible subscription payments they make.
+
+Button: Start Referring.
+
+# 17. MEMBER PORTAL PAGES
+
+Build:
+- Member Dashboard.
+- Available Jobs.
+- My Jobs.
+- My Applications.
+- My Submissions.
+- Earnings.
+- Withdrawals.
+- Membership.
+- Referral Dashboard.
+- Referral Wallet.
+- Referral History.
+- Notifications.
+- Profile Settings.
+- Security Settings.
+- Payment History.
+
+# 18. ADMINISTRATOR PORTAL
+
+Build:
+- Overview.
+- Members.
+- Jobs.
+- Job Categories.
+- Providers.
+- Provider Verification.
+- Allocations.
+- Applications.
+- Submissions.
+- Submission Reviews.
+- Membership Plans.
+- Subscriptions.
+- Payments.
+- Withdrawals.
+- Worker Earnings.
+- Referral Programme.
+- Referral Commissions.
+- Referral Withdrawals.
+- Affiliate Partners.
+- Affiliate Revenue.
+- Project Contracts.
+- Project Commissions.
+- Financial Ledger.
+- Expenses.
+- Reports.
+- Exchange Rates.
+- Pricing Settings.
+- Notifications.
+- Website Content.
+- Roles and Permissions.
+- Audit Logs.
+- General Settings.
+
+# 19. DATABASE ARCHITECTURE
+
+Use Supabase PostgreSQL or an equivalent relational database.
+
+Create tables for:
+
+- users
+- profiles
+- roles
+- permissions
+- membership_plans
+- subscriptions
+- subscription_transactions
+- exchange_rates
+- pricing_settings
+- job_categories
+- jobs
+- job_providers
+- provider_verifications
+- job_allocations
+- job_applications
+- job_submissions
+- submission_reviews
+- worker_performance
+- earnings
+- withdrawals
+- payment_transactions
+- referral_codes
+- referral_relationships
+- referral_clicks
+- referral_conversions
+- referral_commissions
+- referral_wallet_transactions
+- affiliate_partners
+- affiliate_links
+- affiliate_clicks
+- affiliate_conversions
+- affiliate_commissions
+- project_contracts
+- project_commissions
+- financial_ledger
+- expenses
+- notifications
+- admin_settings
+- audit_logs
+
+Implement:
+- Foreign keys.
+- Database constraints.
+- Unique transaction references.
+- Appropriate indexes.
+- Row Level Security.
+- Secure permissions.
+- Transaction integrity.
+- Audit history.
+
+Ensure referral commissions are generated exactly once for each eligible confirmed payment.
+
+# 20. TECHNOLOGY STACK
+
+Preferred architecture:
+
+Frontend:
+- Next.js.
+- React.
+- TypeScript.
+- Tailwind CSS.
+- shadcn/ui.
+- Lucide icons.
+
+Backend:
+- Next.js server-side functionality.
+- Secure API routes.
+- Server-side validation.
+
+Database:
+- Supabase PostgreSQL.
+
+Authentication:
+- Supabase Auth.
+
+File storage:
+- Supabase Storage.
+
+Payments:
+- Safaricom Daraja API.
+- M-Pesa STK Push.
+- Secure callbacks.
+
+Email:
+- Transactional email provider.
+
+Hosting:
+- Production-ready cloud hosting.
+
+Use environment variables for all sensitive credentials.
+
+# 21. SECURITY AND COMPLIANCE
+
+Implement:
+- Secure authentication.
+- Role-based access control.
+- Owner-only financial permissions.
+- Server-side membership enforcement.
+- Payment callback validation.
+- Referral fraud prevention.
+- Duplicate payment protection.
+- Secure file uploads.
+- Rate limiting.
+- Database Row Level Security.
+- Audit logs.
+- Backup procedures.
+- Data privacy controls.
+
+Comply with applicable Kenyan data protection requirements.
+
+Do not expose private financial records to ordinary members.
+
+Do not allow members to modify their own subscription status, earnings, referral commissions or job allocations.
+
+# 22. DEVELOPMENT PHASES
+
+Develop the platform systematically.
+
+Phase 1: Brand identity and public website.
+
+Phase 2: Database and authentication.
+
+Phase 3: Membership and subscription system.
+
+Phase 4: Job marketplace and provider management.
+
+Phase 5: Job allocation and submissions.
+
+Phase 6: Member dashboards.
+
+Phase 7: USD/KES conversion and M-Pesa integration.
+
+Phase 8: Earnings and withdrawals.
+
+Phase 9: Referral and affiliate programme.
+
+Phase 10: Owner revenue dashboard.
+
+Phase 11: Administrator dashboard and reporting.
+
+Phase 12: Security testing and production deployment.
+
+Do not remove previously implemented functionality when adding new modules.
+
+# 23. FINAL ACCEPTANCE TESTS
+
+The platform must pass the following tests:
+
+1. Members can register and log in.
+2. New members automatically receive Free status.
+3. Free Members receive two eligible opportunities weekly.
+4. Verified Members receive access to eligible verified-provider jobs.
+5. Pro Workers can purchase the $5 quarterly subscription.
+6. Top-Rated members can purchase the $8 quarterly subscription.
+7. Membership prices are displayed in USD.
+8. M-Pesa requests are made in KES.
+9. Exchange rates are stored for each transaction.
+10. Membership activation requires confirmed payment.
+11. Weekly job allowances reset correctly.
+12. Members can complete and submit tasks.
+13. Administrators can review submissions.
+14. Approved work generates worker earnings.
+15. Every member has a unique referral code.
+16. Referral registrations are correctly attributed.
+17. Eligible confirmed referred subscriptions generate 10% commissions.
+18. Referral commissions are calculated correctly for renewals.
+19. Duplicate payments cannot generate duplicate commissions.
+20. Refunds and chargebacks reverse applicable commissions.
+21. Members can track referral earnings.
+22. Members can request eligible referral withdrawals.
+23. The owner can see total referral revenue.
+24. The owner can see gross revenue and retained revenue.
+25. The owner can see operating expenses and profit.
+26. Worker earnings are separated from platform revenue.
+27. The owner can export financial reports.
+28. Ordinary administrators cannot access restricted owner financial controls.
+29. The application works on mobile, tablet and desktop.
+30. All financial calculations are validated on the backend.
+
+# 24. FINAL BUILD INSTRUCTIONS
+
+Build PROXY AI as a complete commercial online work marketplace.
+
+Do not stop after building the homepage.
+
+Implement the complete database, backend, authentication, membership system, marketplace, job workflows, M-Pesa integration, referral programme, commission system and financial dashboards.
+
+Use realistic sample data for development, but clearly distinguish sample jobs and transactions from genuine production records.
+
+Create database migrations, seed scripts, environment variable documentation and deployment instructions.
+
+Do not use simulated production payments or fake financial statistics.
+
+At the end of each development phase, report:
+- Completed features.
+- Functional features.
+- Pending features.
+- External credentials required.
+- Tests completed.
+- Remaining implementation tasks.
+
+The final platform must be scalable and ready for controlled commercial launch in Kenya.
+
+**PROJECT: PROXY AI**
+
+**TAGLINE: Your Gateway to Online Work.**
+
+**PRIMARY CURRENCY: USD ($).**
+
+**M-PESA PAYMENT CURRENCY: KES.**
+
+**PRO WORKER: $5 PER QUARTER.**
+
+**TOP-RATED: $8 PER QUARTER.**
+
+**REFERRAL COMMISSION: 10% OF ELIGIBLE SUBSCRIPTION REVENUE.**

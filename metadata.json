@@ -1,0 +1,6 @@
+{
+  "name": "PROXY AI",
+  "description": "Your Gateway to Online Work. Curated digital tasks, AI training & data evaluation marketplace with USD reporting, M-Pesa KES billing, referral commissions, and owner financial analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
