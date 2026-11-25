@@ -20,7 +20,12 @@ export function createApiApp() {
   app.use(express.json({ limit: '2mb' }));
 
   app.get('/api/health', (_req, res) => {
-    res.json({ ok: true, service: 'workaby-api' });
+    res.json({
+      ok: true,
+      service: 'workaby-api',
+      dbConfigured: Boolean(process.env.SQL_HOST || process.env.DATABASE_URL || process.env.POSTGRES_URL),
+      sessionSecretConfigured: Boolean(process.env.SESSION_SECRET?.trim()),
+    });
   });
 
   // Simple in-memory rate limiting for auth and payment initiation endpoints
@@ -42,13 +47,35 @@ export function createApiApp() {
 
   // Lazy one-time idempotent database bootstrap on first API request (no startup probe)
   app.use('/api', async (_req, res, next) => {
+    if (!process.env.SQL_HOST && !process.env.DATABASE_URL && !process.env.POSTGRES_URL) {
+      return res.status(503).json({
+        error: 'Database environment variables are not configured. Set DATABASE_URL in Vercel.',
+        code: 'DB_NOT_CONFIGURED',
+      });
+    }
+
     try {
       await ensureSeeded();
       next();
     } catch (error: any) {
       console.error('Database bootstrap error:', error);
+      const pgCode = String(error?.code || error?.cause?.code || '');
+      if (pgCode === '42P01') {
+        return res.status(503).json({
+          error:
+            'Database tables are missing. Push the Drizzle schema to your PostgreSQL database (npm run db:push) and retry.',
+          code: 'DB_SCHEMA_MISSING',
+        });
+      }
+      if (pgCode === '28P01' || pgCode === '28000') {
+        return res.status(503).json({
+          error: 'Database authentication failed. Please verify your DATABASE_URL credentials.',
+          code: 'DB_AUTH_FAILED',
+        });
+      }
       return res.status(503).json({
         error: 'Database connection unavailable. Please verify database environment variables.',
+        code: 'DB_UNAVAILABLE',
       });
     }
   });

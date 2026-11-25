@@ -24,6 +24,7 @@ export async function ensureSeeded(): Promise<void> {
     seedPromise = runIdempotentSeed().catch((err) => {
       seedPromise = null;
       console.error('Seed check error:', err);
+      throw err;
     });
   }
   return seedPromise;
