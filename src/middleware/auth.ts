@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import { eq, sql } from 'drizzle-orm';
 import { db } from '../db/index.ts';
 import {
@@ -59,66 +59,115 @@ export async function syncUserRecord(params: {
 
   let dbUser = existingByEmail[0];
 
+  if (!dbUser && params.uid && !params.uid.startsWith('local_')) {
+    const existingByUid = await db
+      .select()
+      .from(users)
+      .where(eq(users.uid, params.uid))
+      .limit(1);
+    dbUser = existingByUid[0];
+  }
+
   if (!dbUser) {
-    const upserted = await db
-      .insert(users)
-      .values({
-        uid: params.uid,
-        email: normalizedEmail,
-        fullName: params.fullName?.trim() || normalizedEmail.split('@')[0],
-        roleId,
-        roleSlug: isOwnerEmail ? 'owner' : 'member',
-        status: 'active',
-        membershipTier: 'free',
-      })
-      .onConflictDoUpdate({
-        target: users.uid,
-        set: {
+    try {
+      const upserted = await db
+        .insert(users)
+        .values({
+          uid: params.uid,
           email: normalizedEmail,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
-    dbUser = upserted[0];
+          fullName: params.fullName?.trim() || normalizedEmail.split('@')[0],
+          roleId,
+          roleSlug: isOwnerEmail ? 'owner' : 'member',
+          status: 'active',
+          membershipTier: 'free',
+        })
+        .onConflictDoUpdate({
+          target: users.uid,
+          set: {
+            email: normalizedEmail,
+            updatedAt: new Date(),
+          },
+        })
+        .returning();
+      dbUser = upserted[0];
 
-    await db
-      .insert(profiles)
-      .values({ userId: dbUser.id, country: 'Kenya', timezone: 'Africa/Nairobi' })
-      .onConflictDoNothing();
+      await db
+        .insert(profiles)
+        .values({ userId: dbUser.id, country: 'Kenya', timezone: 'Africa/Nairobi' })
+        .onConflictDoNothing();
 
-    await db
-      .insert(workerPerformance)
-      .values({ userId: dbUser.id })
-      .onConflictDoNothing();
+      await db
+        .insert(workerPerformance)
+        .values({ userId: dbUser.id })
+        .onConflictDoNothing();
 
-    await db
-      .insert(referralCodes)
-      .values({
-        userId: dbUser.id,
-        code: generateUniqueReferralCode(dbUser.fullName),
-      })
-      .onConflictDoNothing();
+      await db
+        .insert(referralCodes)
+        .values({
+          userId: dbUser.id,
+          code: generateUniqueReferralCode(dbUser.fullName),
+        })
+        .onConflictDoNothing();
 
-    // Link referral attribution if supplied on first registration
-    if (params.referralCode && params.referralCode.trim()) {
-      await attachReferralAttribution(dbUser.id, params.referralCode.trim());
+      // Link referral attribution if supplied on first registration
+      if (params.referralCode && params.referralCode.trim()) {
+        await attachReferralAttribution(dbUser.id, params.referralCode.trim());
+      }
+
+      await db.insert(notifications).values({
+        userId: null,
+        targetRole: 'admin',
+        category: 'registration',
+        title: 'New member registered',
+        message: `${dbUser.fullName} (${dbUser.email}) joined Workaby AI as a Free Member.`,
+        linkPath: '/admin/members',
+      });
+    } catch (err: any) {
+      // Handle concurrent first-sign-in race on unique email constraint
+      if (err?.code === '23505') {
+        const retry = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, normalizedEmail))
+          .limit(1);
+        if (retry[0]) {
+          dbUser = retry[0];
+        } else {
+          throw err;
+        }
+      } else {
+        throw err;
+      }
     }
-
-    await db.insert(notifications).values({
-      userId: null,
-      targetRole: 'admin',
-      category: 'registration',
-      title: 'New member registered',
-      message: `${dbUser.fullName} (${dbUser.email}) joined Workaby AI as a Free Member.`,
-      linkPath: '/admin/members',
-    });
-  } else if (isOwnerEmail && dbUser.roleSlug !== 'owner') {
-    const updated = await db
-      .update(users)
-      .set({ roleSlug: 'owner', roleId, updatedAt: new Date() })
-      .where(eq(users.id, dbUser.id))
-      .returning();
-    dbUser = updated[0];
+  } else {
+    const updates: Record<string, unknown> = {};
+    if (isOwnerEmail && dbUser.roleSlug !== 'owner') {
+      updates.roleSlug = 'owner';
+      updates.roleId = roleId;
+    }
+    // Link verified Firebase UID onto an existing email/password account without creating a duplicate
+    if (
+      params.uid &&
+      !params.uid.startsWith('local_') &&
+      dbUser.uid.startsWith('local_')
+    ) {
+      updates.uid = params.uid;
+    }
+    if (
+      params.fullName?.trim() &&
+      (dbUser.fullName === 'Workaby AI Member' || dbUser.fullName === 'PROXY AI Member')
+    ) {
+      updates.fullName = params.fullName.trim();
+    }
+    if (Object.keys(updates).length > 0) {
+      updates.updatedAt = new Date();
+      const updated = await db
+        .update(users)
+        .set(updates)
+        .where(eq(users.id, dbUser.id))
+        .returning();
+      dbUser = updated[0];
+    }
   }
 
   // Enforce automatic downgrade on expiry while preserving history and balances

@@ -36,7 +36,8 @@ import {
   withdrawals,
   workerPerformance,
 } from '../../src/db/schema.ts';
-import { AuthRequest, requireAuth, requireRole } from '../../src/middleware/auth.ts';
+import type { AuthRequest } from '../../src/middleware/auth.ts';
+import { requireAuth, requireRole } from '../../src/middleware/auth.ts';
 import { refreshLiveUsdKesRate, setManualUsdKesRate } from '../services/exchangeRate.ts';
 import { confirmSubscriptionPayment, refundSubscriptionTransaction } from '../services/mpesa.ts';
 

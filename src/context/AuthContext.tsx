@@ -1,5 +1,12 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { onAuthStateChanged, signInWithPopup, signOut, User as FirebaseUser } from 'firebase/auth';
+import {
+  getRedirectResult,
+  onAuthStateChanged,
+  signInWithPopup,
+  signInWithRedirect,
+  signOut,
+  User as FirebaseUser,
+} from 'firebase/auth';
 import { auth, googleAuthProvider } from '../lib/firebase';
 
 export interface AppUser {
@@ -48,17 +55,56 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+async function parseJsonSafe(resp: Response): Promise<any> {
+  const text = await resp.text();
+  if (!text) return {};
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(
+      `Server returned an unexpected response (${resp.status}). Ensure backend API routes and database environment variables are configured.`
+    );
+  }
+}
+
+function mapFirebaseError(err: any): Error {
+  const code = err?.code || '';
+  if (code === 'auth/unauthorized-domain') {
+    const host = typeof window !== 'undefined' ? window.location.hostname : 'this domain';
+    return new Error(
+      `Google Sign-In is not authorized for "${host}". Add this domain in Firebase Console -> Authentication -> Settings -> Authorized domains (or use your own Firebase project env vars on Vercel), or sign in with Email & Password.`
+    );
+  }
+  if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+    return new Error('Google sign-in popup was closed before completing.');
+  }
+  if (code === 'auth/network-request-failed') {
+    return new Error('Network error while contacting Google Authentication. Please try again.');
+  }
+  if (code === 'auth/account-exists-with-different-credential') {
+    return new Error('An account with this email already exists using a different sign-in method.');
+  }
+  return err instanceof Error ? err : new Error('Authentication failed. Please try again.');
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [pendingReferralCode, setPendingReferralCode] = useState<string | null>(null);
+
   const tokenRef = useRef<string | null>(null);
   const fbUserRef = useRef<FirebaseUser | null>(null);
+  const pendingRefCodeRef = useRef<string | null>(null);
+  const syncPromiseRef = useRef<{ uid: string; promise: Promise<AppUser> } | null>(null);
 
   useEffect(() => {
     tokenRef.current = token;
   }, [token]);
+
+  useEffect(() => {
+    pendingRefCodeRef.current = pendingReferralCode;
+  }, [pendingReferralCode]);
 
   // Capture ?ref=CODE from URL on initial visit and record click
   useEffect(() => {
@@ -66,6 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const ref = params.get('ref');
     if (ref && ref.trim()) {
       const clean = ref.trim().toUpperCase();
+      pendingRefCodeRef.current = clean;
       setPendingReferralCode(clean);
       fetch('/api/public/referrals/track-click', {
         method: 'POST',
@@ -75,44 +122,79 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Listen to Firebase Auth state for seamless Google Sign-In persistence
+  const syncFirebaseUser = useCallback(async (fbUser: FirebaseUser, explicitRefCode?: string): Promise<AppUser> => {
+    if (syncPromiseRef.current && syncPromiseRef.current.uid === fbUser.uid) {
+      return syncPromiseRef.current.promise;
+    }
+
+    const promise = (async () => {
+      const idToken = await fbUser.getIdToken();
+      fbUserRef.current = fbUser;
+      tokenRef.current = idToken;
+      setToken(idToken);
+
+      const resp = await fetch('/api/auth/firebase-sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          referralCode: explicitRefCode || pendingRefCodeRef.current || undefined,
+        }),
+      });
+      const data = await parseJsonSafe(resp);
+      if (!resp.ok) {
+        throw new Error(data.error || 'Google sign-in synchronization failed.');
+      }
+
+      const syncedUser = data.user as AppUser;
+      setUser(syncedUser);
+      return syncedUser;
+    })();
+
+    syncPromiseRef.current = { uid: fbUser.uid, promise };
+    try {
+      return await promise;
+    } finally {
+      if (syncPromiseRef.current?.promise === promise) {
+        syncPromiseRef.current = null;
+      }
+    }
+  }, []);
+
+  // Listen to Firebase Auth state ONCE and complete any redirect sign-in
   useEffect(() => {
+    let active = true;
+
+    getRedirectResult(auth)
+      .then((res) => {
+        if (active && res?.user) {
+          return syncFirebaseUser(res.user);
+        }
+      })
+      .catch((err) => {
+        console.error('Firebase redirect result error:', err);
+      });
+
     const unsub = onAuthStateChanged(auth, async (fbUser) => {
+      if (!active) return;
       fbUserRef.current = fbUser;
       if (fbUser) {
         try {
-          const idToken = await fbUser.getIdToken();
-          tokenRef.current = idToken;
-          setToken(idToken);
-          const resp = await fetch('/api/auth/firebase-sync', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${idToken}`,
-            },
-            body: JSON.stringify({ referralCode: pendingReferralCode || undefined }),
-          });
-          if (resp.ok) {
-            const data = await resp.json();
-            // Load full /me details including referralCode & profile
-            const meResp = await fetch('/api/auth/me', {
-              headers: { Authorization: `Bearer ${idToken}` },
-            });
-            if (meResp.ok) {
-              const meData = await meResp.json();
-              setUser(meData.user);
-            } else {
-              setUser(data.user);
-            }
-          }
+          await syncFirebaseUser(fbUser);
         } catch (err) {
           console.error('Firebase state sync error:', err);
         }
       }
-      setLoading(false);
+      if (active) setLoading(false);
     });
-    return () => unsub();
-  }, [pendingReferralCode]);
+
+    return () => {
+      active = false;
+      unsub();
+    };
+  }, [syncFirebaseUser]);
 
   const apiFetch = useCallback(async <T = any>(path: string, options: RequestInit = {}): Promise<T> => {
     let activeToken = tokenRef.current;
@@ -134,13 +216,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!resp.ok) {
       let msg = `Request failed (${resp.status})`;
       if (contentType.includes('application/json')) {
-        const errData = await resp.json().catch(() => ({}));
+        const errData = await parseJsonSafe(resp).catch(() => ({}));
         msg = errData.error || msg;
+      } else {
+        const text = await resp.text().catch(() => '');
+        if (text && !text.startsWith('<')) {
+          msg = `${msg}: ${text.slice(0, 120)}`;
+        }
       }
       throw new Error(msg);
     }
     if (contentType.includes('application/json')) {
-      return (await resp.json()) as T;
+      return (await parseJsonSafe(resp)) as T;
     }
     return (await resp.text()) as unknown as T;
   }, []);
@@ -161,14 +248,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
-    const data = await resp.json();
+    const data = await parseJsonSafe(resp);
     if (!resp.ok) throw new Error(data.error || 'Sign in failed');
     tokenRef.current = data.token;
     setToken(data.token);
     const meResp = await fetch('/api/auth/me', {
       headers: { Authorization: `Bearer ${data.token}` },
     });
-    const meData = meResp.ok ? await meResp.json() : { user: data.user };
+    const meData = meResp.ok ? await parseJsonSafe(meResp) : { user: data.user };
     setUser(meData.user);
     return meData.user as AppUser;
   }, []);
@@ -187,55 +274,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...payload,
-          referralCode: payload.referralCode || pendingReferralCode || undefined,
+          referralCode: payload.referralCode || pendingRefCodeRef.current || undefined,
         }),
       });
-      const data = await resp.json();
+      const data = await parseJsonSafe(resp);
       if (!resp.ok) throw new Error(data.error || 'Registration failed');
       tokenRef.current = data.token;
       setToken(data.token);
       const meResp = await fetch('/api/auth/me', {
         headers: { Authorization: `Bearer ${data.token}` },
       });
-      const meData = meResp.ok ? await meResp.json() : { user: data.user };
+      const meData = meResp.ok ? await parseJsonSafe(meResp) : { user: data.user };
       setUser(meData.user);
       return meData.user as AppUser;
     },
-    [pendingReferralCode]
+    []
   );
 
   const loginWithGoogle = useCallback(
     async (referralCode?: string) => {
-      const cred = await signInWithPopup(auth, googleAuthProvider);
-      fbUserRef.current = cred.user;
-      const idToken = await cred.user.getIdToken();
-      tokenRef.current = idToken;
-      setToken(idToken);
-      const resp = await fetch('/api/auth/firebase-sync', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${idToken}`,
-        },
-        body: JSON.stringify({
-          referralCode: referralCode || pendingReferralCode || undefined,
-        }),
-      });
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.error || 'Google sign-in sync failed');
-      const meResp = await fetch('/api/auth/me', {
-        headers: { Authorization: `Bearer ${idToken}` },
-      });
-      const meData = meResp.ok ? await meResp.json() : { user: data.user };
-      setUser(meData.user);
-      return meData.user as AppUser;
+      try {
+        const cred = await signInWithPopup(auth, googleAuthProvider);
+        return await syncFirebaseUser(cred.user, referralCode);
+      } catch (err: any) {
+        if (err?.code === 'auth/popup-blocked') {
+          await signInWithRedirect(auth, googleAuthProvider);
+          throw new Error('Popup blocked by browser; redirecting to Google Sign-In...');
+        }
+        throw mapFirebaseError(err);
+      }
     },
-    [pendingReferralCode]
+    [syncFirebaseUser]
   );
 
   const logout = useCallback(async () => {
     tokenRef.current = null;
     fbUserRef.current = null;
+    syncPromiseRef.current = null;
     setToken(null);
     setUser(null);
     try {

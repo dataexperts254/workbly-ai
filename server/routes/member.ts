@@ -27,7 +27,8 @@ import {
   workerPerformance,
 } from '../../src/db/schema.ts';
 import { hashPassword, verifyPassword } from '../../src/lib/auth-session.ts';
-import { AuthRequest, requireAuth } from '../../src/middleware/auth.ts';
+import type { AuthRequest } from '../../src/middleware/auth.ts';
+import { requireAuth } from '../../src/middleware/auth.ts';
 import {
   allocateJobToMember,
   getWeeklyAllowanceSummary,

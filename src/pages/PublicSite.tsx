@@ -82,8 +82,10 @@ export function PublicSite({
 
   useEffect(() => {
     fetch('/api/public/overview')
-      .then((r) => r.json())
-      .then((d) => setOverview(d))
+      .then((r) => (r.ok && r.headers.get('content-type')?.includes('application/json') ? r.json() : null))
+      .then((d) => {
+        if (d) setOverview(d);
+      })
       .catch(() => {});
   }, []);
 
@@ -106,8 +108,10 @@ export function PublicSite({
       if (selectedTierFilter) q.set('tier', selectedTierFilter);
       if (verifiedOnly) q.set('verified', 'true');
       fetch(`/api/public/jobs?${q.toString()}`)
-        .then((r) => r.json())
-        .then((d) => setJobsList(d.jobs || []))
+        .then((r) => (r.ok && r.headers.get('content-type')?.includes('application/json') ? r.json() : null))
+        .then((d) => {
+          if (d) setJobsList(d.jobs || []);
+        })
         .catch(() => {});
     }
   }, [route, selectedCategorySlug, searchQuery, selectedTierFilter, verifiedOnly]);
@@ -116,8 +120,8 @@ export function PublicSite({
     if (route.startsWith('/jobs/')) {
       const id = route.replace('/jobs/', '').split('?')[0];
       fetch(`/api/public/jobs/${id}`)
-        .then((r) => r.json())
-        .then((d) => setSelectedJob(d.job || null))
+        .then((r) => (r.ok && r.headers.get('content-type')?.includes('application/json') ? r.json() : null))
+        .then((d) => setSelectedJob(d?.job || null))
         .catch(() => setSelectedJob(null));
     }
   }, [route]);
@@ -197,8 +201,13 @@ export function PublicSite({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: authEmail }),
       });
-      const d = await resp.json();
-      setAuthMessage(d.message || 'Password reset request processed.');
+      const text = await resp.text();
+      const d = text && resp.headers.get('content-type')?.includes('application/json') ? JSON.parse(text) : {};
+      if (!resp.ok) {
+        setAuthError(d.error || `Request failed (${resp.status}).`);
+      } else {
+        setAuthMessage(d.message || 'Password reset request processed.');
+      }
     } catch {
       setAuthError('Unable to send reset request.');
     } finally {

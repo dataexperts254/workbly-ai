@@ -19,9 +19,9 @@ import {
   verifyPassword,
 } from '../../src/lib/auth-session.ts';
 import { adminAuth } from '../../src/lib/firebase-admin.ts';
+import type { AuthRequest } from '../../src/middleware/auth.ts';
 import {
   attachReferralAttribution,
-  AuthRequest,
   requireAuth,
   syncUserRecord,
 } from '../../src/middleware/auth.ts';
@@ -211,9 +211,16 @@ router.post('/firebase-sync', async (req, res) => {
       return res.status(401).json({ error: 'Missing Firebase ID token.' });
     }
     const idToken = authHeader.slice('Bearer '.length).trim();
+    if (!idToken) {
+      return res.status(401).json({ error: 'Empty Firebase ID token.' });
+    }
+
     const decoded = await adminAuth.verifyIdToken(idToken);
     if (!decoded.email) {
-      return res.status(400).json({ error: 'Google account must have an email address.' });
+      return res.status(400).json({ error: 'Authenticated Firebase account must have an email address.' });
+    }
+    if (decoded.firebase?.sign_in_provider === 'google.com' && decoded.email_verified === false) {
+      return res.status(403).json({ error: 'Google account email address is not verified.' });
     }
 
     const referralCode = typeof req.body?.referralCode === 'string' ? req.body.referralCode : undefined;
@@ -228,6 +235,9 @@ router.post('/firebase-sync', async (req, res) => {
       return res.status(403).json({ error: 'Account suspended.' });
     }
 
+    const [profile] = await db.select().from(profiles).where(eq(profiles.userId, synced.id)).limit(1);
+    const [refCode] = await db.select().from(referralCodes).where(eq(referralCodes.userId, synced.id)).limit(1);
+
     return res.json({
       user: {
         id: synced.id,
@@ -235,15 +245,22 @@ router.post('/firebase-sync', async (req, res) => {
         email: synced.email,
         fullName: synced.fullName,
         roleSlug: synced.roleSlug,
+        status: synced.status,
         membershipTier: synced.membershipTier,
         subscriptionExpiresAt: synced.subscriptionExpiresAt,
         completedApprovedJobs: synced.completedApprovedJobs,
         achievement50Jobs: synced.achievement50Jobs,
+        referralCode: refCode?.code || null,
+        profile: profile || null,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Firebase sync error:', error);
-    return res.status(401).json({ error: 'Invalid Firebase session.' });
+    const code = error?.code || '';
+    if (typeof code === 'string' && code.startsWith('auth/')) {
+      return res.status(401).json({ error: 'Invalid or expired Firebase authentication token.' });
+    }
+    return res.status(500).json({ error: 'Unable to synchronize Firebase user profile.' });
   }
 });
 

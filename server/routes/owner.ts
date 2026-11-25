@@ -14,7 +14,8 @@ import {
   subscriptionTransactions,
   users,
 } from '../../src/db/schema.ts';
-import { AuthRequest, requireAuth, requireRole } from '../../src/middleware/auth.ts';
+import type { AuthRequest } from '../../src/middleware/auth.ts';
+import { requireAuth, requireRole } from '../../src/middleware/auth.ts';
 
 const router = Router();
 router.use(requireAuth);
