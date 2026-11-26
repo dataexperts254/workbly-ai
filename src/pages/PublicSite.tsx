@@ -1408,13 +1408,13 @@ export function PublicSite({
                     ? 'Create Your Free Account'
                     : 'Reset Password'}
                 </h1>
-                <p className="text-xs text-slate-600 mt-1">
-                  {route === '/register'
-                    ? 'Every new member starts as a Free Member with 2 weekly tasks and a unique referral code.'
-                    : route === '/login'
-                    ? 'Access your Member, Administrator, or Owner workspace.'
-                    : 'Enter your account email to request a password reset.'}
-                </p>
+                {route !== '/login' && (
+                  <p className="text-xs text-slate-600 mt-1">
+                    {route === '/register'
+                      ? 'Every new member starts as a Free Member with 2 weekly tasks and a unique referral code.'
+                      : 'Enter your account email to request a password reset.'}
+                  </p>
+                )}
               </div>
 
               {authError && (
